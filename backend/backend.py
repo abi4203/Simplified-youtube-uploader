@@ -1,32 +1,24 @@
-import googleapiclient.discovery
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 
-# Your API key
-API_KEY = 'YOUR_API_KEY'
+app = Flask(__name__)
+CORS(app)  # Allow Cross-Origin Resource Sharing (CORS) for development purposes
 
-# Create a YouTube API client
-youtube = googleapiclient.discovery.build('youtube', 'v3', developerKey=API_KEY)
+# Sample data for demonstration
+videos = [
+    {"video_id": 1, "title": "Sample Video 1", "description": "Description 1", "tags": ["tag1", "tag2"]},
+    {"video_id": 2, "title": "Sample Video 2", "description": "Description 2", "tags": ["tag3", "tag4"]}
+]
 
-def get_channel_info(channel_id):
-    request = youtube.channels().list(
-        part="snippet",
-        id=channel_id
-    )
-    response = request.execute()
-    
-    if 'items' in response:
-        channel = response['items'][0]
-        channel_id = channel['id']
-        channel_title = channel['snippet']['title']
-        channel_description = channel['snippet']['description']
-        
-        print("Channel ID:", channel_id)
-        print("Channel Title:", channel_title)
-        print("Channel Description:", channel_description)
-    else:
-        print("Channel not found.")
+@app.route('/videos', methods=['GET'])
+def get_videos():
+    return jsonify(videos)
 
-# Example channel ID (replace with the desired channel ID)
-channel_id = 'UC_x5XG1OV2P6uZZ5FSM9Ttw'
+@app.route('/videos', methods=['POST'])
+def add_video():
+    new_video = request.json
+    videos.append(new_video)
+    return jsonify({"message": "Video added successfully"}), 201
 
-# Call the function to get channel information
-get_channel_info(channel_id)
+if __name__ == '__main__':
+    app.run(debug=True)

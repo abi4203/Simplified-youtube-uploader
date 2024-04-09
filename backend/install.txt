@@ -1,0 +1,11 @@
+1.python -m venv venv
+2.venv\Scripts\activate
+3.pip install flask Flask-Cors
+4.deactivate
+
+
+***note before running py file 
+1.to activate use the below line
+	venv\Scripts\activate
+2.hen you're done working on your project:
+	deactivate
