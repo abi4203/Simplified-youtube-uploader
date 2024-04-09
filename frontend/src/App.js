@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import UserRegistration from './components/Registration';
+import VideoUpload from './components/VideoUpload';
+import RegistrationForm from './components/Registration';
 
 function App() {
   const [videos, setVideos] = useState([]);
@@ -33,6 +36,17 @@ function App() {
     }
   };
 
+ 
+    const handleRegister = (formData) => {
+      // Implement registration logic here
+      console.log('Registering user:', formData);
+    };
+    const handleUpload = (formData) => {
+      // Implement video upload logic here
+      console.log('Uploading video:', formData);
+    };
+  
+
   return (
     <div className="container mt-5">
       <h1 className="mb-4">YouTube Video Upload Automation</h1>
@@ -55,6 +69,11 @@ function App() {
         ))}
       </div>
     </div>
+    // <>
+    //   <UserRegistration onRegister={handleRegister} />
+    //   <VideoUpload onUpload={handleUpload} />
+    //   <RegistrationForm />
+    // </>
   );
 }
 
