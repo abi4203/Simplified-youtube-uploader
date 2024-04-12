@@ -71,8 +71,8 @@ function App() {
     // </div>
     // <>
     //   <UserRegistration onRegister={handleRegister} />
-    //   <VideoUpload onUpload={handleUpload} />
-      <RegistrationForm />
+    <VideoUpload  />
+    // <RegistrationForm />
     // </>
   );
 }
