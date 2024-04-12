@@ -1,7 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const ConfirmationPage = ({ videoDetails }) => {
+const ConfirmationPage = ({ videoId }) => {
+    const [videoDetails, setVideoDetails] = useState(null);
+
+    useEffect(() => {
+        const fetchVideoDetails = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5000/get-video-details/${videoId}`);
+                setVideoDetails(response.data);
+            } catch (error) {
+                console.error('Error fetching video details:', error.response.data.error);
+                // Handle error
+            }
+        };
+
+        fetchVideoDetails();
+    }, [videoId]);
+
     const handleConfirmUpload = async () => {
         try {
             await axios.post('http://localhost:5000/upload-to-youtube', videoDetails);
@@ -13,6 +29,10 @@ const ConfirmationPage = ({ videoDetails }) => {
         }
     };
 
+    if (!videoDetails) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className="container mt-5">
             <h2>Confirmation Page</h2>
@@ -20,7 +40,7 @@ const ConfirmationPage = ({ videoDetails }) => {
                 <strong>Title:</strong> {videoDetails.title}<br />
                 <strong>Description:</strong> {videoDetails.description}<br />
                 <strong>Tags:</strong> {videoDetails.tags}<br />
-                <strong>Video File:</strong> {videoDetails.video.name}<br />
+                <strong>Video File:</strong> {videoDetails.videoName}<br />
             </div>
             <button className="btn btn-primary mt-3" onClick={handleConfirmUpload}>Confirm Upload to YouTube</button>
         </div>

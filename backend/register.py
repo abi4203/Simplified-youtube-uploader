@@ -4,13 +4,15 @@ from pymongo import MongoClient, errors
 from dotenv import load_dotenv
 import os
 from werkzeug.utils import secure_filename
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 app = Flask(__name__)
 CORS(app)
 
 # Load environment variables from .env file
 load_dotenv()
-
 
 # MongoDB connection string from .env file
 MONGO_URI = os.getenv("MONGO_URI")
@@ -21,12 +23,25 @@ db = client.get_database("DB01")
 users_collection = db.get_collection("user")
 videos_collection = db.get_collection("videos")
 
-# Create unique indexes on 'username' and 'email' fields
+# Create unique indexes on 'username' and 'channelId' fields
 try:
     users_collection.create_index([('username', 1)], unique=True)
     users_collection.create_index([('channelId', 1)], unique=True)
 except errors.DuplicateKeyError as e:
     print(f"Error creating unique index: {e}")
+
+# YouTube API credentials
+CLIENT_SECRETS_FILE = "client_secret.json"
+SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+API_SERVICE_NAME = "youtube"
+API_VERSION = "v3"
+
+def get_authenticated_service():
+    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+    credentials = flow.run_local_server(port=9090)
+    return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+youtube = get_authenticated_service()
 
 # Register User endpoint
 @app.route('/register', methods=['POST'])
@@ -36,10 +51,11 @@ def register_user():
         "username": data['username'],
         "password": data['password'],
         "email": data['email'],
-        "channelName": data['channelName'],
-        "channelId": data['channelId'],
+        "channelName": data.get('channelName'),  # Allow channelName to be optional
+        "channelId": data.get('channelId'),      # Allow channelId to be optional
         "country": data['country'],
-        "language": data['language']
+        "language": data['language'],
+        "type": data['type']
     }
     try:
         users_collection.insert_one(new_user)
@@ -48,7 +64,21 @@ def register_user():
         return jsonify({'error': 'Username or channel ID already exists.'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-     
+
+# Login endpoint
+@app.route('/login', methods=['POST'])
+
+def login():
+    data = request.json
+
+    # Check if the user exists in the database
+    user = users_collection.find_one({'username': data['username'], 'password': data['password']})
+
+    if user:
+        return jsonify({'message': 'Login successful'}), 200
+    else:
+        return jsonify({'error': 'Invalid credentials or user type'}), 401
+
 # Create a directory for uploading videos
 UPLOAD_FOLDER = 'videos'
 if not os.path.exists(UPLOAD_FOLDER):
@@ -74,7 +104,8 @@ def upload_video():
             'title': request.form['title'],
             'description': request.form['description'],
             'tags': request.form['tags'].split(',') if request.form['tags'] else [],
-            'filename': filename
+            'filename': filename,
+            'channelId': request.form['channelId']  # Add channelId to video data
         }
         try:
             videos_collection.insert_one(video_data)
@@ -83,6 +114,60 @@ def upload_video():
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid file format'}), 400
+
+# get-video-details based on channel ID
+@app.route('/get-video-details-by-channel/<channel_id>', methods=['GET'])
+def get_video_details_by_channel(channel_id):
+    try:
+        video_data = videos_collection.find({'channelId': channel_id})
+        if video_data:
+            # Assuming you want to return a list of videos
+            video_list = list(video_data)
+            return jsonify(video_list), 200
+        else:
+            return jsonify({'error': 'No videos found for this channel'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Upload to YouTube endpoint
+@app.route('/upload-to-youtube', methods=['POST'])
+def upload_to_youtube():
+    data = request.json
+
+    # Video details from frontend
+    video_title = data['title']
+    video_description = data['description']
+    video_tags = data['tags']
+    video_file_path = os.path.join(app.config['UPLOAD_FOLDER'], data['filename'])
+    channel_id = data['channelId']  
+
+    try:
+        # Upload video to YouTube
+        request_body = {
+            'snippet': {
+                'title': video_title,
+                'description': video_description,
+                'tags': video_tags.split(','),
+                'categoryId': '22',  # Sample category ID (Entertainment)
+                'channelId': channel_id  # Specify the target channel's ID
+            },
+            'status': {
+                'privacyStatus': 'private'  # Sample privacy status
+            }
+        }
+
+        media_file = MediaFileUpload(video_file_path, chunksize=-1, resumable=True)
+        response = youtube.videos().insert(
+            part='snippet,status',
+            body=request_body,
+            media_body=media_file
+        ).execute()
+
+        # If successful, return the YouTube video ID
+        youtube_video_id = response.get('id')
+        return jsonify({'message': 'Video uploaded to YouTube successfully', 'youtube_video_id': youtube_video_id}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

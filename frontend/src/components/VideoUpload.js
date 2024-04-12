@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 const VideoUploadForm = () => {
+    const navigate = useNavigate(); 
     const [formData, setFormData] = useState({
         title: '',
         description: '',
         tags: '',
-        video: null
+        video: null,
+        channelId: ''
     });
 
     const handleChange = (e) => {
@@ -25,7 +29,8 @@ const VideoUploadForm = () => {
         videoData.append('title', formData.title);
         videoData.append('description', formData.description);
         videoData.append('tags', formData.tags);
-        videoData.append('file', formData.video); 
+        videoData.append('file', formData.video);
+        videoData.append('channelId', formData.channelId); 
 
         try {
             await axios.post('http://localhost:5000/upload-video', videoData, {
@@ -35,6 +40,7 @@ const VideoUploadForm = () => {
             });
             alert('Video uploaded successfully!');
             // You can redirect the user to another page here if needed
+            navigate('/confirm');
         } catch (error) {
             console.error('Error uploading video:', error.response.data.error);
             alert('An error occurred while uploading video: ' + error.response.data.error);
@@ -56,6 +62,10 @@ const VideoUploadForm = () => {
                 <div className="form-group">
                     <label>Tags (comma-separated)</label>
                     <input type="text" name="tags" className="form-control" onChange={handleChange} />
+                </div>
+                <div className="form-group">
+                    <label>Channel ID</label>
+                    <input type="text" name="channelId" className="form-control" onChange={handleChange} required />
                 </div>
                 <div className="form-group">
                     <label>Video File</label>
