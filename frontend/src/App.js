@@ -48,31 +48,31 @@ function App() {
   
 
   return (
-    <div className="container mt-5">
-      <h1 className="mb-4">YouTube Video Upload Automation</h1>
-      <button className="btn btn-primary mb-3" onClick={handleAddVideo}>Add Video</button>
-      <div className="row">
-        {videos.map(video => (
-          <div key={video.video_id} className="col-md-4 mb-4">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">{video.title}</h5>
-                <p className="card-text">{video.description}</p>
-                <ul className="list-unstyled">
-                  {video.tags.map(tag => (
-                    <li key={tag}>{tag}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    // <div className="container mt-5">
+    //   <h1 className="mb-4">YouTube Video Upload Automation</h1>
+    //   <button className="btn btn-primary mb-3" onClick={handleAddVideo}>Add Video</button>
+    //   <div className="row">
+    //     {videos.map(video => (
+    //       <div key={video.video_id} className="col-md-4 mb-4">
+    //         <div className="card">
+    //           <div className="card-body">
+    //             <h5 className="card-title">{video.title}</h5>
+    //             <p className="card-text">{video.description}</p>
+    //             <ul className="list-unstyled">
+    //               {video.tags.map(tag => (
+    //                 <li key={tag}>{tag}</li>
+    //               ))}
+    //             </ul>
+    //           </div>
+    //         </div>
+    //       </div>
+    //     ))}
+    //   </div>
+    // </div>
     // <>
     //   <UserRegistration onRegister={handleRegister} />
     //   <VideoUpload onUpload={handleUpload} />
-    //   <RegistrationForm />
+      <RegistrationForm />
     // </>
   );
 }

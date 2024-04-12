@@ -24,8 +24,8 @@ const RegistrationForm = () => {
             alert('User registered successfully!');
             // You can redirect the user to another page here if needed
         } catch (error) {
-            console.error('Error registering user:', error);
-            alert('An error occurred while registering user.');
+            console.error('Error registering user:', error.response.data.error);
+            alert('An error occurred while registering user: ' + error.response.data.error);
         }
     };
 

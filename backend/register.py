@@ -1,45 +1,50 @@
 from flask import Flask, jsonify, request
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+from pymongo import MongoClient, errors
+from dotenv import load_dotenv
+import os
 
 app = Flask(__name__)
 CORS(app)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # SQLite database
-db = SQLAlchemy(app)
 
-# User Model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    channel_name = db.Column(db.String(100), nullable=False)
-    channel_id = db.Column(db.String(100), nullable=False)
-    country = db.Column(db.String(50), nullable=False)
-    language = db.Column(db.String(50), nullable=False)
+# Load environment variables from .env file
+load_dotenv()
 
-    def __repr__(self):
-        return f'<User {self.username}>'
+# MongoDB connection string from .env file
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
 
-# Create the database tables
-db.create_all()
+# Specify the database and collection
+db = client.get_database("DB01")
+users_collection = db.get_collection("user")
+
+# Create unique indexes on 'username' and 'email' fields
+try:
+    users_collection.create_index([('username', 1)], unique=True)
+    users_collection.create_index([('channelId', 1)], unique=True)
+except errors.DuplicateKeyError as e:
+    print(f"Error creating unique index: {e}")
 
 # Register User endpoint
 @app.route('/register', methods=['POST'])
 def register_user():
     data = request.json
-    new_user = User(
-        username=data['username'],
-        password=data['password'],
-        email=data['email'],
-        channel_name=data['channel_name'],
-        channel_id=data['channel_id'],
-        country=data['country'],
-        language=data['language']
-    )
-    db.session.add(new_user)
-    db.session.commit()
-    return jsonify({'message': 'User registered successfully'}), 201
+    new_user = {
+        "username": data['username'],
+        "password": data['password'],
+        "email": data['email'],
+        "channelName": data['channelName'],
+        "channelId": data['channelId'],
+        "country": data['country'],
+        "language": data['language']
+    }
+    try:
+        users_collection.insert_one(new_user)
+        return jsonify({'message': 'User registered successfully'}), 201
+    except errors.DuplicateKeyError:
+        return jsonify({'error': 'Username or channel ID already exists.'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
