@@ -1,8 +1,7 @@
-// VideoList.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 
-const VideoList = ({ channelId }) => {
+const VideoList = ({ channelId, onSelectVideo }) => {
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
@@ -27,6 +26,7 @@ const VideoList = ({ channelId }) => {
             <strong>Description:</strong> {video.description}<br />
             <strong>Tags:</strong> {video.tags.join(', ')}<br />
             <strong>Filename:</strong> {video.filename}<br />
+            <button onClick={() => onSelectVideo(video)}>Select Video</button>
           </li>
         ))}
       </ul>
