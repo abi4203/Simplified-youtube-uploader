@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; // Assuming you are using React Router
+import { Link } from 'react-router-dom'; // Import Link for routing
 
 const HomePage = () => {
     return (
@@ -17,6 +17,9 @@ const HomePage = () => {
                         <button className="btn btn-secondary btn-lg btn-block">Video Editor</button>
                     </Link>
                 </div>
+            </div>
+            <div className="mt-3">
+                <p>Already have an account? <Link to="/login">Login</Link></p>
             </div>
         </div>
     );
