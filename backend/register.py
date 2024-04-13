@@ -3,6 +3,7 @@ from flask_cors import CORS
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
 import os
+from bson import ObjectId  
 from werkzeug.utils import secure_filename
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -55,14 +56,15 @@ def register_user():
         "username": data['username'],
         "password": data['password'],
         "email": data['email'],
-        # Allow channelName to be optional
         "channelName": data.get('channelName'),
-        # Allow channelId to be optional
         "channelId": data.get('channelId'),
         "country": data['country'],
         "language": data['language'],
         "type": data['type']
     }
+    if new_user["type"] == "video-editor":
+        new_user.pop("channelId", None)
+        new_user.pop("channelName", None)
     try:
         users_collection.insert_one(new_user)
         return jsonify({'message': 'User registered successfully'}), 201
@@ -76,10 +78,8 @@ def register_user():
 def login():
     data = request.json
     user = users_collection.find_one({'username': data['username'], 'password': data['password']})
-
     if user:
         session['username'] = data['username'] 
-        print("Session after login:", session)
         return jsonify({'message': 'Login successful'}), 200
     else:
         return jsonify({'error': 'Invalid credentials or user type'}), 401
@@ -88,7 +88,6 @@ def login():
 @app.route('/user', methods=['GET'])
 def get_user_data():
     username = session.get('username')
-    print("Session in get_user_data:", session)
 
     if not username:
         return jsonify({'error': 'User not logged in'}), 401
@@ -143,18 +142,22 @@ def upload_video():
     else:
         return jsonify({'error': 'Invalid file format'}), 400
 
-# get-video-details based on channel ID
-@app.route('/get-video-details-by-channel/<channel_id>', methods=['GET'])
-def get_video_details_by_channel(channel_id):
+# Get video details by channel ID endpoint
+@app.route('/videos-by-channel/<channel_id>', methods=['GET'])
+def get_videos_by_channel(channel_id):
     try:
         video_data = videos_collection.find({'channelId': channel_id})
         if video_data:
-            # Assuming you want to return a list of videos
-            video_list = list(video_data)
+            # Convert ObjectId to string for JSON serialization
+            video_list = []
+            for video in video_data:
+                video['_id'] = str(video['_id'])  # Convert _id to string
+                video_list.append(video)
             return jsonify(video_list), 200
         else:
             return jsonify({'error': 'No videos found for this channel'}), 404
     except Exception as e:
+        print("Error:", e)  # Add this line for debugging
         return jsonify({'error': str(e)}), 500
 
 # Upload to YouTube endpoint
