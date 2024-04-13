@@ -182,7 +182,6 @@ def get_videos_by_channel(channel_id):
 # Upload to YouTube endpoint
 @app.route('/upload-to-youtube', methods=['POST'])
 def upload_to_youtube():
-
     try:
         data = request.json
         channel_id = data.get('channelId')
@@ -201,6 +200,7 @@ def upload_to_youtube():
                 'description': video_data['description'],
                 'tags': video_data['tags'],
                 'categoryId': '22',  # Sample category ID (Entertainment)
+                'channelId': channel_id
             },
             'status': {
                 'privacyStatus': 'private'  # Sample privacy status
@@ -219,11 +219,17 @@ def upload_to_youtube():
             media_body=media_file
         ).execute()
 
+        # If successful, remove the video from the database
+        videos_collection.delete_one({'_id': video_data['_id']})
+
         # If successful, return the YouTube video ID
         youtube_video_id = response.get('id')
         return jsonify({'message': 'Video uploaded to YouTube successfully', 'youtube_video_id': youtube_video_id}), 200
+    except KeyError as e:
+        return jsonify({'error': f'Missing key in request JSON: {e}'}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
