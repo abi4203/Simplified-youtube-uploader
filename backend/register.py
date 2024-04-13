@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
@@ -9,7 +9,9 @@ from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)  # Allow credentials
+
+app.secret_key = os.urandom(24)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,25 +25,27 @@ db = client.get_database("DB01")
 users_collection = db.get_collection("user")
 videos_collection = db.get_collection("videos")
 
-# Create unique indexes on 'username' and 'channelId' fields
-try:
-    users_collection.create_index([('username', 1)], unique=True)
-    users_collection.create_index([('channelId', 1)], unique=True)
-except errors.DuplicateKeyError as e:
-    print(f"Error creating unique index: {e}")
-
 # YouTube API credentials
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 
+# Helper function to authenticate with YouTube API
 def get_authenticated_service():
-    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
+    flow = InstalledAppFlow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, SCOPES)
     credentials = flow.run_local_server(port=9090)
     return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
 
 youtube = get_authenticated_service()
+
+# Create unique indexes on 'username' and 'channelId' fields
+try:
+    users_collection.create_index([('username', 1)], unique=True)
+    users_collection.create_index([('channelId', 1)], unique=True)
+except errors.DuplicateKeyError as e:
+    print(f"Error creating unique index: {e}")
 
 # Register User endpoint
 @app.route('/register', methods=['POST'])
@@ -51,8 +55,10 @@ def register_user():
         "username": data['username'],
         "password": data['password'],
         "email": data['email'],
-        "channelName": data.get('channelName'),  # Allow channelName to be optional
-        "channelId": data.get('channelId'),      # Allow channelId to be optional
+        # Allow channelName to be optional
+        "channelName": data.get('channelName'),
+        # Allow channelId to be optional
+        "channelId": data.get('channelId'),
         "country": data['country'],
         "language": data['language'],
         "type": data['type']
@@ -67,17 +73,38 @@ def register_user():
 
 # Login endpoint
 @app.route('/login', methods=['POST'])
-
 def login():
     data = request.json
-
-    # Check if the user exists in the database
     user = users_collection.find_one({'username': data['username'], 'password': data['password']})
 
     if user:
+        session['username'] = data['username'] 
+        print("Session after login:", session)
         return jsonify({'message': 'Login successful'}), 200
     else:
         return jsonify({'error': 'Invalid credentials or user type'}), 401
+
+# User data endpoint
+@app.route('/user', methods=['GET'])
+def get_user_data():
+    username = session.get('username')
+    print("Session in get_user_data:", session)
+
+    if not username:
+        return jsonify({'error': 'User not logged in'}), 401
+
+    user = users_collection.find_one({'username': username}, {'_id': 0, 'password': 0})
+
+    if user:
+        return jsonify({'user': user}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+# Logout endpoint
+@app.route('/logout', methods=['POST'])
+def logout():
+    session.pop('username', None)
+    return jsonify({'message': 'Logged out successfully'}), 200
 
 # Create a directory for uploading videos
 UPLOAD_FOLDER = 'videos'
@@ -91,12 +118,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def upload_video():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
-    
+
     video_file = request.files['file']
-    
+
     if video_file.filename == '':
         return jsonify({'error': 'No selected video file'}), 400
-    
+
     if video_file:
         filename = secure_filename(video_file.filename)
         video_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
@@ -105,7 +132,8 @@ def upload_video():
             'description': request.form['description'],
             'tags': request.form['tags'].split(',') if request.form['tags'] else [],
             'filename': filename,
-            'channelId': request.form['channelId']  # Add channelId to video data
+            # Add channelId to video data
+            'channelId': request.form['channelId']
         }
         try:
             videos_collection.insert_one(video_data)
@@ -138,8 +166,9 @@ def upload_to_youtube():
     video_title = data['title']
     video_description = data['description']
     video_tags = data['tags']
-    video_file_path = os.path.join(app.config['UPLOAD_FOLDER'], data['filename'])
-    channel_id = data['channelId']  
+    video_file_path = os.path.join(
+        app.config['UPLOAD_FOLDER'], data['filename'])
+    channel_id = data['channelId']
 
     try:
         # Upload video to YouTube
@@ -156,7 +185,8 @@ def upload_to_youtube():
             }
         }
 
-        media_file = MediaFileUpload(video_file_path, chunksize=-1, resumable=True)
+        media_file = MediaFileUpload(
+            video_file_path, chunksize=-1, resumable=True)
         response = youtube.videos().insert(
             part='snippet,status',
             body=request_body,

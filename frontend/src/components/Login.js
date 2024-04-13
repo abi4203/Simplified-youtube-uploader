@@ -1,16 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { useUser } from './UserContext';
 
 const LoginForm = () => {
     const navigate = useNavigate();
     const { type } = useParams();
+    const { setUser } = useUser(); // Get setUser from UserContext
 
     const [formData, setFormData] = useState({
         username: '',
         password: '',
-        // type: type
     });
+
+    useEffect(() => {
+        // Check if user is already logged in
+        const checkLoggedIn = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/user', {
+                    withCredentials: true,
+                });
+                setUser(response.data.user);
+            } catch (error) {
+                // User not logged in
+            }
+        };
+
+        checkLoggedIn();
+    }, []); // Runs once on mount to check if user is logged in
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -20,14 +37,21 @@ const LoginForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:5000/login', formData);
-            alert('Login successful!');
-            // Redirect to appropriate page based on type
-             navigate('/upload');
+            const response = await axios.post('http://localhost:5000/login', formData, {
+                withCredentials: true,
+            });
 
+            if (response && response.status === 200) {
+                alert('Login successful!');
+                setUser(response.data.user); // Save user data to context
+                navigate('/profile');
+            } else {
+                console.error('Invalid response:', response);
+                alert('An error occurred while logging in.');
+            }
         } catch (error) {
-            console.error('Error logging in:', error.response.data.error);
-            alert('An error occurred while logging in: ' + error.response.data.error);
+            console.error('Error logging in:', error.response?.data?.error || 'An error occurred.');
+            alert('An error occurred while logging in.');
         }
     };
 

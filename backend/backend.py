@@ -1,70 +1,58 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
+from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
-from google_auth_oauthlib.flow import InstalledAppFlow
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+app.secret_key = os.urandom(24)
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Mock video upload folder
-UPLOAD_FOLDER = 'videos'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# MongoDB connection string from .env file
+MONGO_URI = os.getenv("MONGO_URI")
+client = MongoClient(MONGO_URI)
 
-# YouTube API credentials
-CLIENT_SECRETS_FILE = "client_secret.json"
-SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
-API_SERVICE_NAME = "youtube"
-API_VERSION = "v3"
+# Specify the database and collections
+db = client.get_database("DB01")
+users_collection = db.get_collection("user")
+videos_collection = db.get_collection("videos")
 
-def get_authenticated_service():
-    flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRETS_FILE, SCOPES)
-    credentials = flow.run_console()
-    return build(API_SERVICE_NAME, API_VERSION, credentials=credentials)
-
-youtube = get_authenticated_service()
-
-@app.route('/upload-to-youtube', methods=['POST'])
-def upload_to_youtube():
+# Login endpoint
+@app.route('/login', methods=['POST'])
+def login():
     data = request.json
+    user = users_collection.find_one({'username': data['username'], 'password': data['password']})
 
-    # Video details from frontend
-    video_title = data['title']
-    video_description = data['description']
-    video_tags = data['tags']
-    video_file_path = os.path.join(app.config['UPLOAD_FOLDER'], data['video']['name'])
+    if user:
+        session['username'] = data['username']
+        print("Session after login:", session)
+        return jsonify({'message': 'Login successful'}), 200
+    else:
+        return jsonify({'error': 'Invalid credentials'}), 401
 
-    try:
-        # Upload video to YouTube
-        request_body = {
-            'snippet': {
-                'title': video_title,
-                'description': video_description,
-                'tags': video_tags.split(','),
-                'categoryId': '22'  # Sample category ID (Entertainment)
-            },
-            'status': {
-                'privacyStatus': 'private'  # Sample privacy status
-            }
-        }
+# User data endpoint
+@app.route('/user', methods=['GET'])
+def get_user_data():
+    username = session.get('username')
+    print("Session in get_user_data:", session)
 
-        media_file = MediaFileUpload(video_file_path, chunksize=-1, resumable=True)
-        response = youtube.videos().insert(
-            part='snippet,status',
-            body=request_body,
-            media_body=media_file
-        ).execute()
+    if not username:
+        return jsonify({'error': 'User not logged in'}), 401
 
-        # If successful, return the YouTube video ID
-        youtube_video_id = response.get('id')
-        return jsonify({'message': 'Video uploaded to YouTube successfully', 'youtube_video_id': youtube_video_id}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    user = users_collection.find_one({'username': username}, {'_id': 0, 'password': 0})
+
+    if user:
+        return jsonify({'user': user}), 200
+    else:
+        return jsonify({'error': 'User not found'}), 404
+
+# Debug session endpoint
+@app.route('/debug_session', methods=['GET'])
+def debug_session():
+    return jsonify(dict(session))
 
 if __name__ == '__main__':
     app.run(debug=True)

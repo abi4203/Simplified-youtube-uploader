@@ -1,46 +1,44 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import axios from 'axios';
+import { useUser } from '../components/UserContext'; // Correct import path
 
 const Profile = () => {
-    const { type } = useParams();
-    const [userData, setUserData] = useState(null);
+  const { user, setUser } = useUser(); // Get user and setUser from UserContext
 
-    useEffect(() => {
-        // Fetch user data from backend when component mounts
-        const fetchUserData = async () => {
-            try {
-                const response = await axios.get('http://localhost:5000/profile');
-                setUserData(response.data);
-            } catch (error) {
-                console.error('Error fetching user data:', error.response.data.error);
-                alert('An error occurred while fetching user data: ' + error.response.data.error);
-            }
-        };
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/user', {
+          withCredentials: true,
+        });
+        setUser(response.data.user); // Update user in context
+        console.log('User data:', response.data.user);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    };
 
-        fetchUserData();
-    }, []);
+    // Fetch user data only if user is not already in context
+    if (!user) {
+      fetchUserData();
+    }
+  }, [user, setUser]); // Re-run effect when user or setUser changes
 
-    return (
-        <div className="container mt-5">
-            <h2>{type === 'content_creator' ? 'Content Creator' : 'Video Editor'} Profile</h2>
-            {userData ? (
-                <div>
-                    <p><strong>Username:</strong> {userData.username}</p>
-                    <p><strong>Email:</strong> {userData.email}</p>
-                    <p><strong>Channel Name:</strong> {userData.channelName}</p>
-                    <p><strong>Channel ID:</strong> {userData.channelId}</p>
-                    <p><strong>Country:</strong> {userData.country}</p>
-                    <p><strong>Language:</strong> {userData.language}</p>
-                    <p><strong>Type:</strong> {type === 'content_creator' ? 'Content Creator' : 'Video Editor'}</p>
-                </div>
-            ) : (
-                <p>Loading user data...</p>
-            )}
+  return (
+    <div className="container mt-5">
+      <h2>User Profile</h2>
+
+      {user ? (
+        <div>
+          <p><strong>Username:</strong> {user?.username}</p>
+          {/* Display other user details here */}
         </div>
-    );
+      ) : (           
+        <p>Loading user data...</p>
+      )}
+
+    </div>
+  );
 };
 
 export default Profile;
-
-
