@@ -67,7 +67,7 @@ const LoginForm = () => {
                     <label>Password</label>
                     <input type="password" name="password" className="form-control" onChange={handleChange} required />
                 </div>
-                <button type="submit" className="btn btn-primary">Login</button>
+                <button type="submit" className="btn btn-primary mt-2">Login</button>
             </form>
         </div>
     );
