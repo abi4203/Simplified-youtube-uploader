@@ -39,7 +39,7 @@ const VideoUploadForm = () => {
                 }
             });
             alert('Video uploaded successfully!');
-            // You can redirect the user to another page here if needed
+            
             navigate('/profile');
         } catch (error) {
             console.error('Error uploading video:', error.response.data.error);

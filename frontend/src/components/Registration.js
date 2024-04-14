@@ -15,7 +15,7 @@ const RegistrationForm = () => {
         channelId: '',
         country: '',
         language: '',
-        type: type // Add the type to the form data
+        type: type 
     });
 
     const handleChange = (e) => {

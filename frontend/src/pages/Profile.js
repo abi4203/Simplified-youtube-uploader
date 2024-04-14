@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import axios from 'axios';
-import { useUser } from '../components/UserContext'; // Correct import path
-import { Routes, Route, Navigate, Link, Outlet,useNavigate } from 'react-router-dom'; // Import Link for routing
+import { useUser } from '../components/UserContext'; 
+import { Routes, Route, Navigate, Link, Outlet,useNavigate } from 'react-router-dom'; 
 
 const Profile = () => {
     const { user, setUser } = useUser(); 
@@ -13,18 +13,18 @@ const Profile = () => {
                 const response = await axios.get('http://localhost:5000/user', {
                     withCredentials: true,
                 });
-                setUser(response.data.user); // Update user in context
+                setUser(response.data.user); 
                 console.log('User data:', response.data.user);
             } catch (error) {
                 console.error('Error fetching user data:', error);
             }
         };
 
-        // Fetch user data only if user is not already in context
+        
         if (!user) {
             fetchUserData();
         }
-    }, [user, setUser]); // Re-run effect when user or setUser changes
+    }, [user, setUser]); 
 
     const handleLogout = async () => {
         try {
@@ -33,7 +33,7 @@ const Profile = () => {
             });
 
             if (response && response.status === 200) {
-                setUser(null); // Clear user from context
+                setUser(null); 
                 console.log('Logged out successfully');
                 navigate('/');
             } else {
@@ -48,7 +48,7 @@ const Profile = () => {
         return <p>Loading user data...</p>;
     }
 
-    // Render based on user type
+    
     const renderProfileBasedOnType = () => {
         switch (user.type) {
             case 'video-editor':

@@ -14,12 +14,12 @@ import Header from './components/Header';
 function PrivateRoute({ element, allowedTypes }) {
   const { user } = useUser();
   if (!user) {
-    // Redirect to login if user not logged in
+    
     return <Navigate to="/login" />;
   }
 
   if (!allowedTypes.includes(user.type)) {
-    // Redirect to profile if user type is not allowed
+    
     return <Navigate to="/profile" />;
   }
 

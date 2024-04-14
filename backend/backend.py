@@ -10,29 +10,29 @@ from googleapiclient.http import MediaFileUpload
 from google_auth_oauthlib.flow import InstalledAppFlow
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True)  # Allow credentials
+CORS(app, supports_credentials=True)  
 
 app.secret_key = os.urandom(24)
 
-# Load environment variables from .env file
+
 load_dotenv()
 
-# MongoDB connection string from .env file
+
 MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 
-# Specify the database and collections
+
 db = client.get_database("DB01")
 users_collection = db.get_collection("user")
 videos_collection = db.get_collection("videos")
 
-# YouTube API credentials
+
 CLIENT_SECRETS_FILE = "client_secrets.json"
 SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
 API_SERVICE_NAME = "youtube"
 API_VERSION = "v3"
 
-# Helper function to authenticate with YouTube API
+
 
 
 def get_authenticated_service():
@@ -44,14 +44,14 @@ def get_authenticated_service():
 
 youtube = get_authenticated_service()
 
-# Create unique indexes on 'username' and 'channelId' fields
+
 try:
     users_collection.create_index([('username', 1)], unique=True)
     users_collection.create_index([('channelId', 1)], unique=True)
 except errors.DuplicateKeyError as e:
     print(f"Error creating unique index: {e}")
 
-# Register User endpoint
+
 
 
 @app.route('/register', methods=['POST'])
@@ -78,7 +78,7 @@ def register_user():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Login endpoint
+
 
 
 @app.route('/login', methods=['POST'])
@@ -92,7 +92,7 @@ def login():
     else:
         return jsonify({'error': 'Invalid credentials or user type'}), 401
 
-# User data endpoint
+
 
 
 @app.route('/user', methods=['GET'])
@@ -110,7 +110,7 @@ def get_user_data():
     else:
         return jsonify({'error': 'User not found'}), 404
 
-# Logout endpoint
+
 
 
 @app.route('/logout', methods=['POST'])
@@ -119,14 +119,14 @@ def logout():
     return jsonify({'message': 'Logged out successfully'}), 200
 
 
-# Create a directory for uploading videos
+
 UPLOAD_FOLDER = 'videos'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Upload Video endpoint
+
 
 
 @app.route('/upload-video', methods=['POST'])
@@ -147,7 +147,7 @@ def upload_video():
             'description': request.form['description'],
             'tags': request.form['tags'].split(',') if request.form['tags'] else [],
             'filename': filename,
-            # Add channelId to video data
+            
             'channelId': request.form['channelId']
         }
         try:
@@ -158,7 +158,7 @@ def upload_video():
     else:
         return jsonify({'error': 'Invalid file format'}), 400
 
-# Get video details by channel ID endpoint
+
 
 
 @app.route('/videos-by-channel/<channel_id>', methods=['GET'])
@@ -166,20 +166,20 @@ def get_videos_by_channel(channel_id):
     try:
         video_data = videos_collection.find({'channelId': channel_id})
         if video_data:
-            # Convert ObjectId to string for JSON serialization
+            
             video_list = []
             for video in video_data:
-                video['_id'] = str(video['_id'])  # Convert _id to string
+                video['_id'] = str(video['_id'])  
                 video_list.append(video)
             return jsonify(video_list), 200
         else:
             return jsonify({'error': 'No videos found for this channel'}), 404
     except Exception as e:
-        print("Error:", e)  # Add this line for debugging
+        print("Error:", e)  
         return jsonify({'error': str(e)}), 500
 
 
-# Upload to YouTube endpoint
+
 @app.route('/upload-to-youtube', methods=['POST'])
 def upload_to_youtube():
     try:
@@ -188,26 +188,26 @@ def upload_to_youtube():
         if not channel_id:
             return jsonify({'error': 'Channel ID is required'}), 400
 
-        # Fetch video details from the database based on channelId
+        
         video_data = videos_collection.find_one({'channelId': channel_id})
         if not video_data:
             return jsonify({'error': 'Video not found for this channel'}), 404
 
-        # Prepare video metadata for YouTube upload
+        
         body = {
             'snippet': {
                 'title': video_data['title'],
                 'description': video_data['description'],
                 'tags': video_data['tags'],
-                'categoryId': '22',  # Sample category ID (Entertainment)
+                'categoryId': '22',  
                 'channelId': channel_id
             },
             'status': {
-                'privacyStatus': 'private'  # Sample privacy status
+                'privacyStatus': 'private'  
             }
         }
 
-        # Upload video to YouTube
+        
         media_file = MediaFileUpload(
             os.path.join(app.config['UPLOAD_FOLDER'], video_data['filename']),
             chunksize=-1,
@@ -219,10 +219,10 @@ def upload_to_youtube():
             media_body=media_file
         ).execute()
 
-        # If successful, remove the video from the database
+        
         videos_collection.delete_one({'_id': ObjectId(video_data['_id'])})
 
-        # If successful, return the YouTube video ID
+        
         youtube_video_id = response.get('id')
         return jsonify({'message': 'Video uploaded to YouTube successfully', 'youtube_video_id': youtube_video_id}), 200
     except KeyError as e:

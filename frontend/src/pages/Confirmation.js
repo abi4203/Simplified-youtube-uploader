@@ -9,14 +9,14 @@ const ConfirmationPage = () => {
     const { user } = useUser();
     const [videoDetails, setVideoDetails] = useState(null);
 
-    // Function to handle video selection
+    
     const handleSelectVideo = (selectedVideo) => {
-        console.log('Selected Video:', selectedVideo); // Log selected video
+        console.log('Selected Video:', selectedVideo); 
         setVideoDetails(selectedVideo);
     };
 
     const handleConfirmUpload = async () => {
-        // Ensure videoDetails is not null before proceeding
+        
         if (!videoDetails) {
             alert('No video details to upload.');
             return;
@@ -30,7 +30,7 @@ const ConfirmationPage = () => {
             });
             alert('Video uploaded to YouTube successfully!');
             navigate('/profile')
-            // You can redirect the user to another page or perform other actions
+            
         } catch (error) {
             console.error('Error uploading to YouTube:', error.response.data.error);
             alert('An error occurred while uploading to YouTube: ' + error.response.data.error);

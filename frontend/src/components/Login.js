@@ -6,7 +6,7 @@ import { useUser } from './UserContext';
 const LoginForm = () => {
     const navigate = useNavigate();
     const { type } = useParams();
-    const { setUser } = useUser(); // Get setUser from UserContext
+    const { setUser } = useUser(); 
 
     const [formData, setFormData] = useState({
         username: '',
@@ -14,7 +14,7 @@ const LoginForm = () => {
     });
 
     useEffect(() => {
-        // Check if user is already logged in
+        
         const checkLoggedIn = async () => {
             try {
                 const response = await axios.get('http://localhost:5000/user', {
@@ -22,12 +22,12 @@ const LoginForm = () => {
                 });
                 setUser(response.data.user);
             } catch (error) {
-                // User not logged in
+                
             }
         };
 
         checkLoggedIn();
-    }, []); // Runs once on mount to check if user is logged in
+    }, []); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -43,7 +43,7 @@ const LoginForm = () => {
 
             if (response && response.status === 200) {
                 alert('Login successful!');
-                setUser(response.data.user); // Save user data to context
+                setUser(response.data.user); 
                 navigate('/profile');
             } else {
                 console.error('Invalid response:', response);
