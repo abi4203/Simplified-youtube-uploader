@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useUser } from '../components/UserContext';
 import VideoList from '../components/VideoList';
+import { useNavigate } from 'react-router-dom';
 
 const ConfirmationPage = () => {
+    const navigate = useNavigate(); 
     const { user } = useUser();
     const [videoDetails, setVideoDetails] = useState(null);
 
@@ -27,7 +29,7 @@ const ConfirmationPage = () => {
                 }
             });
             alert('Video uploaded to YouTube successfully!');
-            NavigationPreloadManager('/profile')
+            navigate('/profile')
             // You can redirect the user to another page or perform other actions
         } catch (error) {
             console.error('Error uploading to YouTube:', error.response.data.error);
@@ -42,7 +44,7 @@ const ConfirmationPage = () => {
                 <div>
                     <h3>Your Videos</h3>
                     <VideoList channelId={user.channelId} onSelectVideo={handleSelectVideo} />
-                    <button className="btn btn-primary mt-3" onClick={handleConfirmUpload}>Confirm selected videos upload to YouTube</button>
+                    <button className="btn btn-primary m-3" onClick={handleConfirmUpload}>Confirm selected video upload to YouTube</button>
                 </div>
             )}
         </div>
