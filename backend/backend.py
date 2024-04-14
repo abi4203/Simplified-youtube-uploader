@@ -220,7 +220,7 @@ def upload_to_youtube():
         ).execute()
 
         # If successful, remove the video from the database
-        videos_collection.delete_one({'_id': video_data['_id']})
+        videos_collection.delete_one({'_id': ObjectId(video_data['_id'])})
 
         # If successful, return the YouTube video ID
         youtube_video_id = response.get('id')
