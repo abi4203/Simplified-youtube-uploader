@@ -71,7 +71,12 @@ const RegistrationForm = () => {
                     <label>Language</label>
                     <input type="text" name="language" className="form-control" onChange={handleChange} required />
                 </div>
-                <button type="submit" className="btn btn-primary">Register</button>
+                <div className='mt-2'>
+                    <button className="btn btn-secondary me-1" onClick={()=>{
+                        navigate(-1)
+                    }}>Back</button>
+                    <button type="submit" className="btn btn-primary ms-1">Register</button>
+                </div>
             </form>
         </div>
     );

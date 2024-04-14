@@ -41,7 +41,7 @@ const ConfirmationPage = () => {
                 <div>
                     <h3>Your Videos</h3>
                     <VideoList channelId={user.channelId} onSelectVideo={handleSelectVideo} />
-                    <button className="btn btn-primary mt-3" onClick={handleConfirmUpload}>Confirm Upload to YouTube</button>
+                    <button className="btn btn-primary mt-3" onClick={handleConfirmUpload}>Confirm selected videos upload to YouTube</button>
                 </div>
             )}
         </div>

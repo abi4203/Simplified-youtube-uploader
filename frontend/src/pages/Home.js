@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom'; // Import Link for routing
 const HomePage = () => {
     return (
         <div className="container mt-5">
-            <h2>Welcome to the Application</h2>
-            <p>Please select your role:</p>
+            <h2>Welcome to Simplified youtube uploader</h2>
+            <p>Sign up for your new role:</p>
             <div className="row">
                 <div className="col-md-6">
                     <Link to="/register/content-creator">

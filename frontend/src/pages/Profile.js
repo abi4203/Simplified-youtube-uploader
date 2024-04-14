@@ -56,7 +56,7 @@ const Profile = () => {
                     <>
                         <h3>Video Editor Profile</h3>
                         <p><strong>Username:</strong> {user?.username}</p>
-                        <Link to="/profile/upload" className="btn btn-primary mr-2">Upload Video</Link>
+                        <Link to="/profile/upload" className="btn btn-primary mr-2">View videos to confirm for upload to creator</Link>
                     </>
                 );
             case 'content-creator':
@@ -64,7 +64,7 @@ const Profile = () => {
                     <>
                         <h3>Content Creator Profile</h3>
                         <p><strong>Username:</strong> {user?.username}</p>
-                        <Link to="/profile/confirm" className="btn btn-primary mr-2">Confirm Upload to YouTube</Link>
+                        <Link to="/profile/confirm" className="btn btn-primary mr-2">View videos to confirm for youtube upload</Link>
                     </>
                 );
             default:

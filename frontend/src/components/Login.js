@@ -57,7 +57,7 @@ const LoginForm = () => {
 
     return (
         <div className="container mt-5">
-            <h2>Login Form for {type}</h2>
+            <h2>Login Form</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Username</label>
