@@ -27,6 +27,7 @@ const ConfirmationPage = () => {
                 }
             });
             alert('Video uploaded to YouTube successfully!');
+            NavigationPreloadManager('/profile')
             // You can redirect the user to another page or perform other actions
         } catch (error) {
             console.error('Error uploading to YouTube:', error.response.data.error);
