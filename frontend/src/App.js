@@ -9,6 +9,7 @@ import LoginForm from './components/Login';
 import Profile from './pages/Profile';
 import VideoUpload from './components/VideoUpload';
 import { UserProvider, useUser } from './components/UserContext';
+import Header from './components/Header';
 
 function PrivateRoute({ element, allowedTypes }) {
   const { user } = useUser();
@@ -29,6 +30,7 @@ function App() {
 
   return (
     <>
+      <Header/>
       <Router>
         <UserProvider>
           <Routes>
