@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { useUser } from '../components/UserContext';
-import VideoList from '../components/VideoList';
+import { useUser } from './UserContext';
+import VideoList from './VideoList';
 import { useNavigate } from 'react-router-dom';
 
 const ConfirmationPage = () => {
@@ -44,6 +44,7 @@ const ConfirmationPage = () => {
                 <div>
                     <h3>Your Videos</h3>
                     <VideoList channelId={user.channelId} onSelectVideo={handleSelectVideo} />
+                    
                     <button className="btn btn-primary m-3" onClick={handleConfirmUpload}>Confirm selected video upload to YouTube</button>
                 </div>
             )}

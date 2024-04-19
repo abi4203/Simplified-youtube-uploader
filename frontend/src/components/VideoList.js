@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import './videoList.css';
 import axios from 'axios';
 
 const VideoList = ({ channelId, onSelectVideo }) => {
   const [videos, setVideos] = useState([]);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState(null);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const videoOverlayRef = useRef(null);
 
   useEffect(() => {
     const fetchVideos = async () => {
@@ -17,6 +21,23 @@ const VideoList = ({ channelId, onSelectVideo }) => {
     fetchVideos();
   }, [channelId]);
 
+  const handleSelectVideo = (video) => {
+    
+    setSelectedVideoUrl(`http://localhost:5000/videos/${video.filename}`);
+    setShowVideoPlayer(true);
+  };
+
+  const handleCloseVideo = () => {
+    setSelectedVideoUrl(null);
+    setShowVideoPlayer(false);
+  };
+
+  const handleOverlayClick = (event) => {
+    if (event.target === videoOverlayRef.current) {
+      handleCloseVideo();
+    }
+  };
+
   return (
     <div>
       <ul>
@@ -25,11 +46,22 @@ const VideoList = ({ channelId, onSelectVideo }) => {
             <strong>Title:</strong> {video.title}<br />
             <strong>Description:</strong> {video.description}<br />
             <strong>Tags:</strong> {video.tags.join(', ')}<br />
-            <strong>Filename:</strong> {video.filename}<br />
-            <button onClick={() => onSelectVideo(video)}>Select Video</button>
+            <strong  >Filename:</strong> {video.filename}<br />
+            <p> </p>
+            <button className="btn btn-success select-btn" onClick={() => onSelectVideo(video)}>Select Video</button>
+            <button className="btn btn-secondary " onClick={() => handleSelectVideo(video)}>Preview Video</button>
           </li>
         ))}
       </ul>
+      {showVideoPlayer && (
+        <div ref={videoOverlayRef} className="video-overlay" onClick={handleOverlayClick}>
+          <p className="close-btn" onClick={handleCloseVideo}>x</p>
+          <video controls autoPlay className="video-element">
+            <source src={selectedVideoUrl} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import { useUser } from './UserContext';
+import { useUser } from '../components/UserContext';
 
 const LoginForm = () => {
     const navigate = useNavigate();

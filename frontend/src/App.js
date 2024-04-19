@@ -2,10 +2,10 @@ import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-import RegistrationForm from './components/Registration';
-import ConfirmationPage from './pages/Confirmation';
+import RegistrationForm from './pages/Registration';
+import ConfirmationPage from './components/Confirmation';
 import HomePage from './pages/Home';
-import LoginForm from './components/Login';
+import LoginForm from './pages/Login';
 import Profile from './pages/Profile';
 import VideoUpload from './components/VideoUpload';
 import { UserProvider, useUser } from './components/UserContext';
