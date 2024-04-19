@@ -66,7 +66,7 @@ const Profile = () => {
                     <>
                         <h3>Content Creator Profile</h3>
                         <p><strong>Username:</strong> {user?.username}</p>
-                        <Link to="/profile/confirm" className="btn btn-primary mr-2">View videos to confirm for youtube upload</Link>
+                        <Link to="/profile/confirm" className="btn btn-primary mr-2 me-3">View videos to confirm for youtube upload</Link>
                         <Link to="/profile/modify" className="btn btn-primary mr-2">video editor need to modify these videos</Link>
                     </>
                 );

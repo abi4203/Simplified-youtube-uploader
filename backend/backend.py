@@ -180,8 +180,13 @@ def move_to_modify_list(video_id):
     try:
         video = videos_collection.find_one({'_id': ObjectId(video_id)})
         if video:
+            # Update the video description with the text editor content
+            video['changes'] = request.json.get('description')
+
+            # Insert the modified video into the modify video collection
             modify_video_collection.insert_one(video)
 
+            # Delete the original video from the videos collection
             videos_collection.delete_one({'_id': ObjectId(video_id)})
 
             return jsonify({'message': 'Video moved to modify list successfully'}), 200
@@ -189,6 +194,7 @@ def move_to_modify_list(video_id):
             return jsonify({'error': 'Video not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 # Inside your route handler where you're returning JSON response
 @app.route('/get-modify-videos/<channel_id>', methods=['GET'])
@@ -238,8 +244,21 @@ def update_modify_video(video_id):
         return jsonify({'error': str(e)}), 500
 
 
-
-
+@app.route('/move-to-videos-collection/<video_id>', methods=['POST'])
+def move_to_videos_collection(video_id):
+    try:
+        # Find the video in modify_video collection
+        video = modify_video_collection.find_one({'_id': ObjectId(video_id)})
+        if video:
+            # Insert the video into videos collection
+            videos_collection.insert_one(video)
+            # Delete the video from modify_video collection
+            modify_video_collection.delete_one({'_id': ObjectId(video_id)})
+            return jsonify({'message': 'Video moved to videos collection successfully'}), 200
+        else:
+            return jsonify({'error': 'Video not found in modify_videos collection'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Define route for declining a video
 @app.route('/decline-video/<video_id>', methods=['DELETE'])

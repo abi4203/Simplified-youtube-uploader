@@ -51,9 +51,15 @@ const Reupload = ({ username }) => {
     setSelectedFile(event.target.files[0]);
   };
 
-  const handleReupload = () => {
-    // Logic for reuploading video
-    // This can involve opening a dialog for selecting a new file and updating video details
+  const handleReupload = async () => {
+    try {
+      await Promise.all(modifyVideos.map(async (video) => {
+        await axios.post(`http://localhost:5000/move-to-videos-collection/${video._id}`);
+      }));
+      setModifyVideos([]);
+    } catch (error) {
+      console.error('Error reuploading videos:', error);
+    }
   };
 
   return (

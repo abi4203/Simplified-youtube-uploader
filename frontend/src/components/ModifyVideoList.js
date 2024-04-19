@@ -28,7 +28,7 @@ const ModifyVideoList = ({ channelId }) => {
           <li key={index}>
             <strong>Title:</strong> {video.title}<br />
             <strong>Description:</strong> {video.description}<br />
-            <strong>Tags:</strong> {video.tags.join(', ')}<br />
+            <strong>Tags:</strong> {video.tags}<br />
             <strong>Filename:</strong> {video.filename}<br />
           </li>
         ))}
