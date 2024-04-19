@@ -175,6 +175,8 @@ def get_video(filename):
         return str(e), 404
 
 # Route for moving videos from modify_video collection to videos collection
+
+
 @app.route('/move-to-videos-collection/<video_id>', methods=['POST'])
 def move_to_videos_collection(video_id):
     try:
@@ -202,7 +204,8 @@ def get_modify_videos_by_channel(channel_id):
             for video in video_data:
                 video['_id'] = str(video['_id'])  # Convert ObjectId to string
                 video_list.append(video)
-            return json.dumps(video_list), 200  # Serialize the response using json.dumps()
+            # Serialize the response using json.dumps()
+            return json.dumps(video_list), 200
         else:
             return jsonify({'error': 'No videos found for this channel'}), 404
     except Exception as e:
@@ -213,7 +216,7 @@ def get_modify_videos_by_channel(channel_id):
 @app.route('/get-modify-videos-by-username/<username>', methods=['GET'])
 def get_modify_videos_by_username(username):
     try:
-        modify_videos = modify_video_collection.find({'username': username})  
+        modify_videos = modify_video_collection.find({'username': username})
         modify_video_list = [video for video in modify_videos]
         for video in modify_video_list:
             video['_id'] = str(video['_id'])  # Convert ObjectId to string
@@ -225,29 +228,19 @@ def get_modify_videos_by_username(username):
 @app.route('/update-modify-video/<video_id>', methods=['PUT'])
 def update_modify_video(video_id):
     try:
-        # Get the video from the request data
-        title = request.form['title']
-        description = request.form['description']
-        tags = request.form['tags'].split(',')
-        file = request.files['file'] if 'file' in request.files else None
-        channelId = request.form['channelId']
-
-        # Update the video details
-        modify_video_collection.update_one(
-            {'_id': ObjectId(video_id)},
-            {'$set': {'title': title, 'description': description, 'tags': tags, 'channelId': channelId}}
-        )
-
-        # Optionally, handle file upload if necessary
-        if file:
-            # Process the file upload, if needed
-            pass
-
-        return jsonify({'message': 'Video updated successfully'}), 200
+        data = request.form.to_dict()
+        if 'file' in request.files:
+            file = request.files['file']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            data['filename'] = filename
+        update_result = modify_video_collection.update_one({'_id': ObjectId(video_id)}, {'$set': data})
+        if update_result.modified_count:
+            return jsonify({'message': 'Video details updated successfully'}), 200
+        else:
+            return jsonify({'error': 'No video found or no changes were made'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-
 
 # Define route for declining a video
 @app.route('/decline-video/<video_id>', methods=['DELETE'])
@@ -263,6 +256,7 @@ def decline_video(video_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/move-to-modify-list/<video_id>', methods=['PUT'])
 def move_to_modify_list(video_id):
     try:
@@ -277,6 +271,7 @@ def move_to_modify_list(video_id):
             return jsonify({'error': 'Video not found'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 @app.route('/upload-to-youtube', methods=['POST'])
 def upload_to_youtube():

@@ -72,11 +72,12 @@ const Reupload = ({ username }) => {
             <strong>Description:</strong> {editMode ? <textarea value={video.description} onChange={(e) => setModifyVideos(modifyVideos.map((v, i) => i === index ? { ...v, description: e.target.value } : v))} /> : video.description}<br />
             <strong>Tags:</strong> {editMode ? <input type="text" value={video.tags} onChange={(e) => setModifyVideos(modifyVideos.map((v, i) => i === index ? { ...v, tags: e.target.value.split(',') } : v))} /> : video.tags}<br />
             <strong>Filename:</strong> {editMode ? <input type="file" onChange={handleFileChange} /> : video.filename}<br />
+            <button className='btn btn-success me-3' onClick={handleEdit}>{editMode ? 'Save' : 'Edit'}</button>
+            <button className='btn btn-primary' onClick={handleReupload}>Reupload</button>
           </li>
         ))}
       </ul>
-      <button onClick={handleEdit}>{editMode ? 'Save' : 'Edit'}</button>
-      <button onClick={handleReupload}>Reupload</button>
+
     </div>
   );
 }

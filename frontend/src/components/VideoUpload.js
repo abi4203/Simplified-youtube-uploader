@@ -64,30 +64,34 @@ const VideoUploadForm = () => {
     };
 
     return (
-        <div className="container mt-5">
+        <div className="container ">
             <h2>Video Upload Form</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Title</label>
                     <input type="text" name="title" className="form-control" onChange={handleChange} required />
                 </div>
+                <br/>
                 <div className="form-group">
                     <label>Description</label>
                     <textarea name="description" className="form-control" onChange={handleChange} required />
                 </div>
+                <br/>
                 <div className="form-group">
                     <label>Tags (comma-separated)</label>
                     <input type="text" name="tags" className="form-control" onChange={handleChange} />
                 </div>
+                <br/>
                 <div className="form-group">
                     <label>Channel ID</label>
                     <input type="text" name="channelId" className="form-control" onChange={handleChange} required />
                 </div>
+                <br/>
                 <div className="form-group">
-                    <label>Video File</label>
-                    <input type="file" name="video" className="form-control-file" onChange={handleFileChange} required />
-                </div>
-                <button type="submit" className="btn btn-primary">Upload Video</button>
+                    <label>Video File:</label>
+                    <input  type="file" name="video" className="form-control-file " onChange={handleFileChange} required />
+                </div><br/>
+                <button type="submit" className="btn btn-primary br-2">Upload Video</button>
             </form>
         </div>
     );
