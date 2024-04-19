@@ -174,29 +174,24 @@ def get_video(filename):
     except Exception as e:
         return str(e), 404
 
-
-@app.route('/move-to-modify-list/<video_id>', methods=['PUT'])
-def move_to_modify_list(video_id):
+# Route for moving videos from modify_video collection to videos collection
+@app.route('/move-to-videos-collection/<video_id>', methods=['POST'])
+def move_to_videos_collection(video_id):
     try:
-        video = videos_collection.find_one({'_id': ObjectId(video_id)})
+        # Find the video in modify_video collection
+        video = modify_video_collection.find_one({'_id': ObjectId(video_id)})
         if video:
-            # Update the video description with the text editor content
-            video['changes'] = request.json.get('description')
-
-            # Insert the modified video into the modify video collection
-            modify_video_collection.insert_one(video)
-
-            # Delete the original video from the videos collection
-            videos_collection.delete_one({'_id': ObjectId(video_id)})
-
-            return jsonify({'message': 'Video moved to modify list successfully'}), 200
+            # Insert the video into videos collection
+            videos_collection.insert_one(video)
+            # Delete the video from modify_video collection
+            modify_video_collection.delete_one({'_id': ObjectId(video_id)})
+            return jsonify({'message': 'Video moved to videos collection successfully'}), 200
         else:
-            return jsonify({'error': 'Video not found'}), 404
+            return jsonify({'error': 'Video not found in modify_videos collection'}), 404
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# Inside your route handler where you're returning JSON response
 @app.route('/get-modify-videos/<channel_id>', methods=['GET'])
 def get_modify_videos_by_channel(channel_id):
     try:
@@ -226,39 +221,33 @@ def get_modify_videos_by_username(username):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+
 @app.route('/update-modify-video/<video_id>', methods=['PUT'])
 def update_modify_video(video_id):
     try:
-        data = request.form.to_dict()
-        if 'file' in request.files:
-            file = request.files['file']
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            data['filename'] = filename
-        update_result = modify_video_collection.update_one({'_id': ObjectId(video_id)}, {'$set': data})
-        if update_result.modified_count:
-            return jsonify({'message': 'Video details updated successfully'}), 200
-        else:
-            return jsonify({'error': 'No video found or no changes were made'}), 404
+        # Get the video from the request data
+        title = request.form['title']
+        description = request.form['description']
+        tags = request.form['tags'].split(',')
+        file = request.files['file'] if 'file' in request.files else None
+        channelId = request.form['channelId']
+
+        # Update the video details
+        modify_video_collection.update_one(
+            {'_id': ObjectId(video_id)},
+            {'$set': {'title': title, 'description': description, 'tags': tags, 'channelId': channelId}}
+        )
+
+        # Optionally, handle file upload if necessary
+        if file:
+            # Process the file upload, if needed
+            pass
+
+        return jsonify({'message': 'Video updated successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-@app.route('/move-to-videos-collection/<video_id>', methods=['POST'])
-def move_to_videos_collection(video_id):
-    try:
-        # Find the video in modify_video collection
-        video = modify_video_collection.find_one({'_id': ObjectId(video_id)})
-        if video:
-            # Insert the video into videos collection
-            videos_collection.insert_one(video)
-            # Delete the video from modify_video collection
-            modify_video_collection.delete_one({'_id': ObjectId(video_id)})
-            return jsonify({'message': 'Video moved to videos collection successfully'}), 200
-        else:
-            return jsonify({'error': 'Video not found in modify_videos collection'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 # Define route for declining a video
 @app.route('/decline-video/<video_id>', methods=['DELETE'])
