@@ -10,16 +10,18 @@ import Profile from './pages/Profile';
 import VideoUpload from './components/VideoUpload';
 import { UserProvider, useUser } from './components/UserContext';
 import Header from './components/Header';
+import ModifyList from './components/ModiflyList';
+import Reupload from './components/Reupload';
 
 function PrivateRoute({ element, allowedTypes }) {
   const { user } = useUser();
   if (!user) {
-    
+
     return <Navigate to="/login" />;
   }
 
   if (!allowedTypes.includes(user.type)) {
-    
+
     return <Navigate to="/profile" />;
   }
 
@@ -30,7 +32,7 @@ function App() {
 
   return (
     <>
-      <Header/>
+      <Header />
       <Router>
         <UserProvider>
           <Routes>
@@ -44,9 +46,21 @@ function App() {
                   allowedTypes={["video-editor"]}
                 />
               } />
+              <Route path='reupload' element={
+                <PrivateRoute
+                  element={<Reupload />}
+                  allowedTypes={["video-editor"]}
+                />
+              } />
               <Route path='confirm' element={
                 <PrivateRoute
                   element={<ConfirmationPage />}
+                  allowedTypes={["content-creator"]}
+                />
+              } />
+              <Route path='modify' element={
+                <PrivateRoute
+                  element={<ModifyList />}
                   allowedTypes={["content-creator"]}
                 />
               } />

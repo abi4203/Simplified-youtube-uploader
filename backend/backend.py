@@ -146,27 +146,32 @@ def upload_video():
         return jsonify({'error': 'Invalid file format'}), 400
 
 
-# Define route for modifying a video
-
-
+# Store modified videos in session storage
 @app.route('/modify-video/<video_id>', methods=['PUT'])
 def modify_video(video_id):
     try:
-        # Get the new video details from the request
         data = request.json
         updated_video_data = {
             'title': data['title'],
             'description': data['description'],
             'tags': data['tags'].split(',') if data['tags'] else [],
         }
-
-        # Update the video details in the database
-        videos_collection.update_one({'_id': ObjectId(video_id)}, {
-                                     '$set': updated_video_data})
-
+        videos_collection.update_one({'_id': ObjectId(video_id)}, {'$set': updated_video_data})
+        
+        # Store modified video in session storage
+        modified_videos = session.get('modified_videos', [])
+        modified_videos.append(updated_video_data)
+        session['modified_videos'] = modified_videos
+        
         return jsonify({'message': 'Video updated successfully'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Retrieve modified videos from session storage
+@app.route('/get-modified-videos', methods=['GET'])
+def get_modified_videos():
+    modified_videos = session.get('modified_videos', [])
+    return jsonify({'modified_videos': modified_videos}), 200
 
 
 @app.route('/videos-by-channel/<channel_id>', methods=['GET'])
