@@ -3,6 +3,7 @@ from flask_cors import CORS
 from pymongo import MongoClient, errors
 from dotenv import load_dotenv
 import os
+import json
 from bson import ObjectId
 from werkzeug.utils import secure_filename
 from googleapiclient.discovery import build
@@ -25,6 +26,7 @@ client = MongoClient(MONGO_URI)
 db = client.get_database("DB01")
 users_collection = db.get_collection("user")
 videos_collection = db.get_collection("videos")
+modify_video_collection = db.get_collection("modify-video")
 
 
 CLIENT_SECRETS_FILE = "client_secrets.json"
@@ -130,7 +132,8 @@ def upload_video():
         filename = secure_filename(video_file.filename)
         video_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
         video_data = {
-            'username': request.form['username'],  # Retrieve username from form data
+            # Retrieve username from form data
+            'username': request.form['username'],
             'title': request.form['title'],
             'description': request.form['description'],
             'tags': request.form['tags'].split(',') if request.form['tags'] else [],
@@ -144,34 +147,6 @@ def upload_video():
             return jsonify({'error': str(e)}), 500
     else:
         return jsonify({'error': 'Invalid file format'}), 400
-
-
-# Store modified videos in session storage
-@app.route('/modify-video/<video_id>', methods=['PUT'])
-def modify_video(video_id):
-    try:
-        data = request.json
-        updated_video_data = {
-            'title': data['title'],
-            'description': data['description'],
-            'tags': data['tags'].split(',') if data['tags'] else [],
-        }
-        videos_collection.update_one({'_id': ObjectId(video_id)}, {'$set': updated_video_data})
-        
-        # Store modified video in session storage
-        modified_videos = session.get('modified_videos', [])
-        modified_videos.append(updated_video_data)
-        session['modified_videos'] = modified_videos
-        
-        return jsonify({'message': 'Video updated successfully'}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Retrieve modified videos from session storage
-@app.route('/get-modified-videos', methods=['GET'])
-def get_modified_videos():
-    modified_videos = session.get('modified_videos', [])
-    return jsonify({'modified_videos': modified_videos}), 200
 
 
 @app.route('/videos-by-channel/<channel_id>', methods=['GET'])
@@ -195,14 +170,78 @@ def get_videos_by_channel(channel_id):
 @app.route('/videos/<filename>', methods=['GET'])
 def get_video(filename):
     try:
-        # Assuming videos are stored in a directory named 'videos'
         return send_file(f'videos/{filename}')
     except Exception as e:
-        return str(e), 404  # Return a 404 error if the file is not found
+        return str(e), 404
+
+
+@app.route('/move-to-modify-list/<video_id>', methods=['PUT'])
+def move_to_modify_list(video_id):
+    try:
+        video = videos_collection.find_one({'_id': ObjectId(video_id)})
+        if video:
+            modify_video_collection.insert_one(video)
+
+            videos_collection.delete_one({'_id': ObjectId(video_id)})
+
+            return jsonify({'message': 'Video moved to modify list successfully'}), 200
+        else:
+            return jsonify({'error': 'Video not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Inside your route handler where you're returning JSON response
+@app.route('/get-modify-videos/<channel_id>', methods=['GET'])
+def get_modify_videos_by_channel(channel_id):
+    try:
+        video_data = modify_video_collection.find({'channelId': channel_id})
+        if video_data:
+
+            video_list = []
+            for video in video_data:
+                video['_id'] = str(video['_id'])  # Convert ObjectId to string
+                video_list.append(video)
+            return json.dumps(video_list), 200  # Serialize the response using json.dumps()
+        else:
+            return jsonify({'error': 'No videos found for this channel'}), 404
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/get-modify-videos-by-username/<username>', methods=['GET'])
+def get_modify_videos_by_username(username):
+    try:
+        modify_videos = modify_video_collection.find({'username': username})  
+        modify_video_list = [video for video in modify_videos]
+        for video in modify_video_list:
+            video['_id'] = str(video['_id'])  # Convert ObjectId to string
+        return jsonify(modify_video_list), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/update-modify-video/<video_id>', methods=['PUT'])
+def update_modify_video(video_id):
+    try:
+        data = request.form.to_dict()
+        if 'file' in request.files:
+            file = request.files['file']
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            data['filename'] = filename
+        update_result = modify_video_collection.update_one({'_id': ObjectId(video_id)}, {'$set': data})
+        if update_result.modified_count:
+            return jsonify({'message': 'Video details updated successfully'}), 200
+        else:
+            return jsonify({'error': 'No video found or no changes were made'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+
+
 
 # Define route for declining a video
-
-
 @app.route('/decline-video/<video_id>', methods=['DELETE'])
 def decline_video(video_id):
     try:

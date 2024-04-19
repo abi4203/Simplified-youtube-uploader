@@ -10,8 +10,8 @@ import Profile from './pages/Profile';
 import VideoUpload from './components/VideoUpload';
 import { UserProvider, useUser } from './components/UserContext';
 import Header from './components/Header';
-import ModifyList from './components/ModiflyList';
 import Reupload from './components/Reupload';
+import ModifyVideoList from './components/ModifyVideoList';
 
 function PrivateRoute({ element, allowedTypes }) {
   const { user } = useUser();
@@ -60,7 +60,7 @@ function App() {
               } />
               <Route path='modify' element={
                 <PrivateRoute
-                  element={<ModifyList />}
+                  element={<ModifyVideoList/> }
                   allowedTypes={["content-creator"]}
                 />
               } />
