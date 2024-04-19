@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect ,useState} from 'react';
 import axios from 'axios';
 import { useUser } from '../components/UserContext'; 
 import { Routes, Route, Navigate, Link, Outlet,useNavigate } from 'react-router-dom'; 
@@ -6,6 +6,7 @@ import { Routes, Route, Navigate, Link, Outlet,useNavigate } from 'react-router-
 const Profile = () => {
     const { user, setUser } = useUser(); 
     const navigate = useNavigate(); 
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -15,12 +16,16 @@ const Profile = () => {
                 });
                 setUser(response.data.user); 
                 console.log('User data:', response.data.user);
+                setLoading(false);
+                
             } catch (error) {
-                console.error('Error fetching user data:', error);
+                console.error('Error fetching user data:');
+                alert('User not logged in go to login page');
+                navigate('/login')
+                
             }
         };
 
-        
         if (!user) {
             fetchUserData();
         }
@@ -44,9 +49,6 @@ const Profile = () => {
         }
     };
 
-    if (!user) {
-        return <p>Loading user data...</p>;
-    }
 
     
     const renderProfileBasedOnType = () => {

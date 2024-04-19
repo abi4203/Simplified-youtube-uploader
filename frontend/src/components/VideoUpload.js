@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
 
 const VideoUploadForm = () => {
     const navigate = useNavigate(); 
@@ -12,6 +11,22 @@ const VideoUploadForm = () => {
         video: null,
         channelId: ''
     });
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await axios.get('http://localhost:5000/user', {
+                    withCredentials: true,
+                });
+                setUsername(response.data.user.username);
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        };
+        
+        fetchUserData();
+    }, []); 
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -30,7 +45,8 @@ const VideoUploadForm = () => {
         videoData.append('description', formData.description);
         videoData.append('tags', formData.tags);
         videoData.append('file', formData.video);
-        videoData.append('channelId', formData.channelId); 
+        videoData.append('channelId', formData.channelId);
+        videoData.append('username', username); 
 
         try {
             await axios.post('http://localhost:5000/upload-video', videoData, {

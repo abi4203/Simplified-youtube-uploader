@@ -6,7 +6,7 @@ import { useUser } from '../components/UserContext';
 const LoginForm = () => {
     const navigate = useNavigate();
     const { type } = useParams();
-    const { setUser } = useUser(); 
+    const { setUser } = useUser();
 
     const [formData, setFormData] = useState({
         username: '',
@@ -14,7 +14,7 @@ const LoginForm = () => {
     });
 
     useEffect(() => {
-        
+
         const checkLoggedIn = async () => {
             try {
                 const response = await axios.get('http://localhost:5000/user', {
@@ -22,12 +22,12 @@ const LoginForm = () => {
                 });
                 setUser(response.data.user);
             } catch (error) {
-                
+
             }
         };
 
         checkLoggedIn();
-    }, []); 
+    }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -43,7 +43,7 @@ const LoginForm = () => {
 
             if (response && response.status === 200) {
                 alert('Login successful!');
-                setUser(response.data.user); 
+                setUser(response.data.user);
                 navigate('/profile');
             } else {
                 console.error('Invalid response:', response);
@@ -67,6 +67,9 @@ const LoginForm = () => {
                     <label>Password</label>
                     <input type="password" name="password" className="form-control" onChange={handleChange} required />
                 </div>
+                <button className="btn btn-secondary me-3  mt-2 " onClick={() => {
+                    navigate(-1)
+                }}>Back</button>
                 <button type="submit" className="btn btn-primary mt-2">Login</button>
             </form>
         </div>

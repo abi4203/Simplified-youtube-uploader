@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import './videoList.css';
 import axios from 'axios';
 
-const VideoList = ({ channelId, onSelectVideo }) => {
+const VideoList = ({ channelId, onSelectVideo, onModifyVideo }) => {
   const [videos, setVideos] = useState([]);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState(null);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
@@ -22,7 +22,6 @@ const VideoList = ({ channelId, onSelectVideo }) => {
   }, [channelId]);
 
   const handleSelectVideo = (video) => {
-    
     setSelectedVideoUrl(`http://localhost:5000/videos/${video.filename}`);
     setShowVideoPlayer(true);
   };
@@ -30,6 +29,23 @@ const VideoList = ({ channelId, onSelectVideo }) => {
   const handleCloseVideo = () => {
     setSelectedVideoUrl(null);
     setShowVideoPlayer(false);
+  };
+
+  const handleModifyClick = async (video) => {
+    try {
+      // Your modify logic here
+    } catch (error) {
+      console.error('Error modifying video:', error);
+    }
+  };
+
+  const handleDeclineClick = async (video) => {
+    try {
+      await axios.delete(`http://localhost:5000/decline-video/${video._id}`);
+      setVideos(videos.filter(v => v._id !== video._id)); // Remove the declined video from the list
+    } catch (error) {
+      console.error('Error declining video:', error);
+    }
   };
 
   const handleOverlayClick = (event) => {
@@ -46,10 +62,10 @@ const VideoList = ({ channelId, onSelectVideo }) => {
             <strong>Title:</strong> {video.title}<br />
             <strong>Description:</strong> {video.description}<br />
             <strong>Tags:</strong> {video.tags.join(', ')}<br />
-            <strong  >Filename:</strong> {video.filename}<br />
-            <p> </p>
-            <button className="btn btn-success select-btn" onClick={() => onSelectVideo(video)}>Select Video</button>
-            <button className="btn btn-secondary " onClick={() => handleSelectVideo(video)}>Preview Video</button>
+            <strong>Filename:</strong> {video.filename}<br />
+            <button className="btn btn-success mar" onClick={() => onSelectVideo(video)}>Select Video</button>
+            <button className="btn btn-info mar" onClick={() => handleModifyClick(video)}>Modify</button>
+            <button className="btn btn-danger mar" onClick={() => handleDeclineClick(video)}>Decline</button>
           </li>
         ))}
       </ul>
