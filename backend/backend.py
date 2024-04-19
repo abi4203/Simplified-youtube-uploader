@@ -263,6 +263,20 @@ def decline_video(video_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/move-to-modify-list/<video_id>', methods=['PUT'])
+def move_to_modify_list(video_id):
+    try:
+        video = videos_collection.find_one({'_id': ObjectId(video_id)})
+        if video:
+            modify_video_collection.insert_one(video)
+
+            videos_collection.delete_one({'_id': ObjectId(video_id)})
+
+            return jsonify({'message': 'Video moved to modify list successfully'}), 200
+        else:
+            return jsonify({'error': 'Video not found'}), 404
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/upload-to-youtube', methods=['POST'])
 def upload_to_youtube():
